@@ -7,52 +7,38 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
+import { InjectQueue } from '@nestjs/bull';
+import type { Queue } from 'bull';
+
+
 
 @Controller('files')
 export class FilesController {
-  @UseInterceptors(FileInterceptor('file'))
-  @Post('file')
-  uploadFile(
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    return {
-      file: file.buffer.toString(),
-    };
-  }
+  constructor(
+    @InjectQueue('converter') private readonly convertQueue: Queue
+  ) { }
 
   @UseInterceptors(FileInterceptor('file'))
-  @Post('file/pass-validation')
-  uploadFileAndPassValidation(
+  @Post()
+  uploadFile(
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addFileTypeValidator({
-          fileType: 'jpeg',
+          fileType: 'image/*',
+        })
+        .addMaxSizeValidator({
+          maxSize: 1024 * 1024 * 10
         })
         .build({
           fileIsRequired: false,
         }),
-    )
-    file?: Express.Multer.File,
+    ) file: Express.Multer.File,
   ) {
+    this.convertQueue.add('webp', {
+      data: file.buffer
+    })
     return {
-      file: file?.buffer.toString(),
-    };
-  }
-
-  @UseInterceptors(FileInterceptor('file'))
-  @Post('file/fail-validation')
-  uploadFileAndFailValidation(
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addFileTypeValidator({
-          fileType: 'jpg',
-        })
-        .build(),
-    )
-    file: Express.Multer.File,
-  ) {
-    return {
-      file: file.buffer.toString(),
+      message: "File was queued",
     };
   }
 }

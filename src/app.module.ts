@@ -4,7 +4,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { EventEmitterModule } from '@nestjs/event-emitter'
 
 import { AppController } from './app.controller';
-import { AudioModule } from './audio/audio.module';
+import { ConverterModule } from './converter/converter.module';
 import { TasksModule } from './tasks/tasks.module';
 import { FilesModule } from './files/files.module';
 
@@ -18,7 +18,7 @@ import { FilesModule } from './files/files.module';
       },
     }),
     ScheduleModule.forRoot(),
-    AudioModule,
+    ConverterModule,
     TasksModule,
     FilesModule
   ],
